@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Support Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --light-bg: #f8fafc;
+            --border-color: #e2e8f0;
+            --user-msg-bg: #dbeafe;
+            --agent-msg-bg: #f1f5f9;
+            --status-complete: #dcfce7;
+            --status-processing: #fef9c3;
+            --text-color: #1e293b;
+            --text-light: #64748b;
+            --error-color: #ef4444;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: var(--light-bg);
+            line-height: 1.6;
+        }
+        
+        .header {
+            background-color: white;
+            color: var(--text-color);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .company-logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header h1 {
+            font-weight: 500;
+            font-size: 1.25rem;
+            color: var(--text-color);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success-color);
+        }
+
+        .status-dot.offline {
+            background-color: var(--error-color);
+        }
+        
+        .chat-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .message {
+            padding: 1rem 1.25rem;
+            border-radius: 1rem;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-out;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            position: relative;
+            line-height: 1.5;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-message {
+            background-color: var(--user-msg-bg);
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 0.25rem;
+            color: var(--text-color);
+        }
+        
+        .agent-message {
+            background-color: var(--agent-msg-bg);
+            align-self: flex-start;
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+            text-align: right;
+        }
+        
+        .info-panel {
+            width: 360px;
+            padding: 1.5rem;
+            background-color: var(--light-bg);
+            overflow-y: auto;
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .info-panel h2 {
+            font-size: 1rem;
+            color: var(--text-color);
+            font-weight: 600;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-panel h2 i {
+            color: var(--primary-color);
+        }
+        
+        .payment-info {
+            background-color: white;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .payment-info h3 {
+            margin: 0 0 1rem 0;
+            color: var(--text-color);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .payment-info p {
+            margin: 0.75rem 0;
+            font-size: 0.875rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .payment-info p strong {
+            color: var(--text-light);
+        }
+        
+        .item-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 1rem 0 0 0;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .item-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.875rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            gap: 0.25rem;
+        }
+        
+        .status-completed {
+            background-color: var(--status-complete);
+            color: #166534;
+        }
+        
+        .status-processing {
+            background-color: var(--status-processing);
+            color: #854d0e;
+        }
+        
+        .input-container {
+            display: flex;
+            padding: 1rem 1.5rem;
+            background-color: white;
+            border-top: 1px solid var(--border-color);
+            gap: 0.75rem;
+            position: relative;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 0.875rem 1.25rem;
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            outline: none;
+            background-color: var(--light-bg);
+        }
+        
+        #message-input:focus {
+            border-color: var(--primary-color);
+            background-color: white;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .empty-state {
+            color: var(--text-light);
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.875rem;
+            background-color: white;
+            border-radius: 0.75rem;
+            border: 1px dashed var(--border-color);
+        }
+        
+        .reset-button {
+            background-color: var(--error-color);
+        }
+        
+        .reset-button:hover {
+            background-color: #dc2626;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.5rem;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-light);
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingAnimation {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+        
+        #memory-status {
+            background-color: white;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            font-size: 0.875rem;
+        }
+        
+        #memory-status p {
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #memory-status p i {
+            color: var(--primary-color);
+        }
+        
+        .error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--error-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .debug-info {
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            background: var(--light-bg);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+        
+        .api-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .api-online {
+            background-color: var(--status-complete);
+            color: #166534;
+        }
+        
+        .api-offline {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .footer {
+            background-color: white;
+            padding: 1rem 2rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                flex-direction: column;
+            }
+
+            .info-panel {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+                max-height: 300px;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .company-logo span {
+                display: none;
+            }
+
+            .footer {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .footer-links {
+                justify-content: center;
+            }
+        }
+
+        /* Add smooth scrolling */
+        .chat-messages {
+            scroll-behavior: smooth;
+        }
+
+        /* Add hover effects to messages */
+        .message:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+
+        /* Add focus styles for better accessibility */
+        button:focus, #message-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        /* Add transition for all interactive elements */
+        button, .message, .payment-info, #message-input {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="company-logo">
+                <i class="fas fa-headset"></i>
+                <span>Enterprise Support</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="status-indicator">
+                <div class="status-dot" id="status-dot"></div>
+                <span id="api-status" class="api-status">Checking...</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+            <div class="agent-message message">
+                <div>Hello! I'm your dedicated support assistant. How can I help you today?</div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <div>
+                <h2><i class="fas fa-credit-card"></i> Payment Information</h2>
+                <div id="payment-info">
+                    <div class="empty-state">
+                        <i class="fas fa-info-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                        <p>No payment information available yet.</p>
+                        <p style="margin-top: 0.5rem; font-size: 0.75rem;">Please provide a payment ID in your message.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h2><i class="fas fa-history"></i> Conversation Status</h2>
+                <div id="memory-status">
+                    <p><i class="fas fa-circle-info"></i> New conversation started</p>
+                    <p><i class="fas fa-shield-alt"></i> Your conversation is secure and private</p>
+                </div>
+            </div>
+            
+            <div id="debug-output" class="debug-info"></div>
+        </div>
+    </div>
+    
+    <div class="input-container">
+        <input type="text" id="message-input" placeholder="Type your message here..." />
+        <button id="send-button">
+            <i class="fas fa-paper-plane"></i>
+            Send
+        </button>
+        <button id="reset-button" class="reset-button">
+            <i class="fas fa-redo"></i>
+            Reset
+        </button>
+    </div>
+
+    <div class="footer">
+        <div class="footer-links">
+            <a href="#"><i class="fas fa-shield-alt"></i> Privacy Policy</a>
+            <a href="#"><i class="fas fa-file-contract"></i> Terms of Service</a>
+            <a href="#"><i class="fas fa-question-circle"></i> Help Center</a>
+        </div>
+        <div>© 2024 Enterprise Support. All rights reserved.</div>
+    </div>
+
+    <script>
+        // Prevent any form submission from refreshing the page
+        document.addEventListener('submit', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Store conversation ID and typing state
+        let conversationId = null;
+        let debugMode = true;
+        let isTyping = false;
+        let typingTimeout = null;
+        
+        // DOM elements
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const resetButton = document.getElementById('reset-button');
+        const paymentInfoPanel = document.getElementById('payment-info');
+        const memoryStatus = document.getElementById('memory-status');
+        const debugOutput = document.getElementById('debug-output');
+        const apiStatus = document.getElementById('api-status');
+        const statusDot = document.getElementById('status-dot');
+        
+        // API URL - change this to match your server
+        const API_URL = 'http://localhost:8000';
+        
+        // Show debug by default to help diagnose issues
+        debugOutput.style.display = 'block';
+        
+        // Format timestamp
+        function formatTimestamp() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Add typing indicator
+        function showTypingIndicator() {
+            if (isTyping) return;
+            
+            isTyping = true;
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'agent-message message typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Remove typing indicator
+        function removeTypingIndicator() {
+            const typingIndicator = document.querySelector('.typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+            isTyping = false;
+        }
+        
+        // Enable debug mode with Ctrl+D
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'd') {
+                debugMode = !debugMode;
+                debugOutput.style.display = debugMode ? 'block' : 'none';
+                logDebug(`Debug mode ${debugMode ? 'enabled' : 'disabled'}`);
+            }
+        });
+        
+        // Debug logger function
+        function logDebug(message) {
+            console.log(`[DEBUG] ${message}`);
+            const timestamp = new Date().toLocaleTimeString();
+            debugOutput.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+        
+        // Send message when button is clicked
+        sendButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            sendMessage();
+        });
+        
+        // Send message when Enter key is pressed
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Show typing indicator when user is typing
+        messageInput.addEventListener('input', () => {
+            if (typingTimeout) clearTimeout(typingTimeout);
+            
+            if (messageInput.value.trim()) {
+                showTypingIndicator();
+                typingTimeout = setTimeout(() => {
+                    removeTypingIndicator();
+                }, 3000);
+            } else {
+                removeTypingIndicator();
+            }
+        });
+        
+        // Reset conversation when reset button is clicked
+        resetButton.addEventListener('click', function(event) {
+            event.preventDefault();
+            if (confirm('Are you sure you want to reset the conversation? This cannot be undone.')) {
+                resetConversation();
+            }
+        });
+
+        // Show connection status on page load
+        checkAPIConnection();
+        
+        // Function to check API connection
+        function checkAPIConnection() {
+            apiStatus.textContent = 'Checking...';
+            statusDot.className = 'status-dot';
+            
+            // First try a simple OPTIONS request to check CORS
+            fetch(API_URL, { 
+                method: 'OPTIONS',
+                mode: 'cors'
+            })
+            .then(() => {
+                // If OPTIONS succeeded, try an actual endpoint
+                return fetch(`${API_URL}/docs`);
+            })
+            .then(response => {
+                logDebug(`API connection check: ${response.status}`);
+                apiStatus.textContent = 'Online';
+                apiStatus.className = 'api-status api-online';
+                statusDot.className = 'status-dot';
+            })
+            .catch(error => {
+                console.error("API connection error:", error);
+                logDebug(`API connection error: ${error.message}`);
+                apiStatus.textContent = 'Offline';
+                apiStatus.className = 'api-status api-offline';
+                statusDot.className = 'status-dot offline';
+                addErrorMessage(`Cannot connect to API server at ${API_URL}. Is it running?`);
+                
+                // Test a direct connection to help diagnose
+                logDebug('Attempting direct API test...');
+                testDirectAPIConnection();
+            });
+        }
+        
+        // Function to add an error message to chat
+        function addErrorMessage(text) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${text}`;
+            chatMessages.appendChild(errorDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Function to send message
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            // Remove typing indicator if present
+            removeTypingIndicator();
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            // Clear input
+            messageInput.value = '';
+            
+            // Show loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'agent-message message loading';
+            loadingDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
+            chatMessages.appendChild(loadingDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Log the request
+            logDebug(`Sending message: "${message}", conversation_id: ${conversationId || 'null'}`);
+            
+            // Prepare payload
+            const payload = {
+                message: message
+            };
+            
+            if (conversationId) {
+                payload.conversation_id = conversationId;
+            }
+            
+            // Send to API with more detailed error handling
+            fetch(`${API_URL}/message`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                logDebug(`Response status: ${response.status}`);
+                
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Server returned ${response.status}: ${text}`);
+                    });
+                }
+                
+                return response.text();
+            })
+            .then(text => {
+                logDebug(`Raw response: ${text}`);
+                
+                try {
+                    const data = JSON.parse(text);
+                    
+                    // Remove loading indicator
+                    chatMessages.removeChild(loadingDiv);
+                    
+                    // Log the response
+                    logDebug(`Parsed response: ${JSON.stringify(data)}`);
+                    
+                    // Save conversation ID
+                    conversationId = data.conversation_id;
+                    
+                    // Update memory status
+                    memoryStatus.innerHTML = `
+                        <p><i class="fas fa-circle-info"></i> Active conversation</p>
+                        <p><i class="fas fa-fingerprint"></i> ID: ${conversationId.substring(0, 8)}...</p>
+                        <p><i class="fas fa-clock"></i> Started: ${new Date().toLocaleTimeString()}</p>
+                    `;
+                    
+                    // Add agent response to chat
+                    addMessage(data.response, 'agent');
+                    
+                    // Check for payment ID in the message
+                    checkForPaymentId(message);
+                    
+                } catch (e) {
+                    throw new Error(`JSON parsing error: ${e.message}, raw response: ${text}`);
+                }
+            })
+            .catch(error => {
+                // Remove loading indicator
+                if (chatMessages.contains(loadingDiv)) {
+                    chatMessages.removeChild(loadingDiv);
+                }
+                
+                console.error('Error:', error);
+                logDebug(`Error: ${error.message}`);
+                addErrorMessage(`Error: ${error.message}. Make sure the API server is running.`);
+            });
+        }
+        
+        // Function to add message to chat
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `${sender}-message message`;
+            messageDiv.innerHTML = `
+                <div>${text}</div>
+                <div class="message-time">${formatTimestamp()}</div>
+            `;
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom with smooth animation
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+        
+        // Function to reset conversation
+        function resetConversation() {
+            if (!conversationId) {
+                // Just reset UI if no active conversation
+                chatMessages.innerHTML = '';
+                addMessage('Hello! I\'m your dedicated support assistant. How can I help you today?', 'agent');
+                
+                paymentInfoPanel.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-info-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                        <p>No payment information available yet.</p>
+                        <p style="margin-top: 0.5rem; font-size: 0.75rem;">Please provide a payment ID in your message.</p>
+                    </div>
+                `;
+                
+                memoryStatus.innerHTML = `
+                    <p><i class="fas fa-circle-info"></i> New conversation started</p>
+                    <p><i class="fas fa-shield-alt"></i> Your conversation is secure and private</p>
+                `;
+                
+                return;
+            }
+            
+            logDebug(`Resetting conversation: ${conversationId}`);
+            
+            fetch(`${API_URL}/conversation/${conversationId}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Server returned ${response.status}: ${text}`);
+                    });
+                }
+                return response.text();
+            })
+            .then(text => {
+                logDebug(`Raw reset response: ${text}`);
+                
+                try {
+                    const data = JSON.parse(text);
+                    logDebug(`Reset response: ${JSON.stringify(data)}`);
+                } catch (e) {
+                    logDebug(`Reset response not JSON: ${e.message}`);
+                }
+                
+                // Clear chat messages
+                chatMessages.innerHTML = '';
+                addMessage('Hello! I\'m your dedicated support assistant. How can I help you today?', 'agent');
+                
+                // Clear payment info
+                paymentInfoPanel.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-info-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                        <p>No payment information available yet.</p>
+                        <p style="margin-top: 0.5rem; font-size: 0.75rem;">Please provide a payment ID in your message.</p>
+                    </div>
+                `;
+                
+                // Update memory status
+                memoryStatus.innerHTML = `
+                    <p><i class="fas fa-circle-info"></i> New conversation started</p>
+                    <p><i class="fas fa-history"></i> Previous conversation was reset</p>
+                `;
+                
+                // Reset conversation ID
+                conversationId = null;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                logDebug(`Reset error: ${error.message}`);
+                addErrorMessage(`Error resetting conversation: ${error.message}`);
+            });
+        }
+        
+        // Function to check for payment ID in message
+        function checkForPaymentId(message) {
+            // Simple regex to check for payment ID format
+            const paymentIdRegex = /\b(PAY[A-Z0-9]{6,10})\b/i;
+            const match = message.match(paymentIdRegex);
+            
+            if (match) {
+                const paymentId = match[1].toUpperCase();
+                logDebug(`Found payment ID: ${paymentId}`);
+                
+                // Example payment data (in a real app, this would come from your API)
+                const paymentData = getPaymentData(paymentId);
+                
+                if (paymentData) {
+                    updatePaymentInfoPanel(paymentData);
+                } else {
+                    paymentInfoPanel.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                            <p>Payment ID ${paymentId} not found.</p>
+                            <p style="margin-top: 0.5rem; font-size: 0.75rem;">Please check the ID and try again.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Function to get payment data (mock function)
+        function getPaymentData(paymentId) {
+            // This is just a mock - in a real app, you'd fetch this from your server
+            const payments = {
+                'PAY123456': {
+                    payment_id: 'PAY123456',
+                    customer_name: 'John Doe',
+                    amount: 129.99,
+                    currency: 'USD',
+                    status: 'completed',
+                    items: [
+                        {name: 'Premium Headphones', quantity: 1, price: 129.99}
+                    ],
+                    date: '2024-03-15'
+                },
+                'PAY789012': {
+                    payment_id: 'PAY789012',
+                    customer_name: 'Jane Smith',
+                    amount: 75.50,
+                    currency: 'USD',
+                    status: 'processing',
+                    items: [
+                        {name: 'Wireless Mouse', quantity: 1, price: 45.50},
+                        {name: 'USB-C Cable', quantity: 2, price: 15.00}
+                    ],
+                    date: '2024-03-14'
+                },
+                'PAY345678': {
+                    payment_id: 'PAY345678',
+                    customer_name: 'Alex Johnson',
+                    amount: 199.95,
+                    currency: 'USD',
+                    status: 'completed',
+                    items: [
+                        {name: 'Smart Watch', quantity: 1, price: 199.95}
+                    ],
+                    date: '2024-03-13'
+                }
+            };
+            
+            return payments[paymentId];
+        }
+        
+        // Function to update payment info panel
+        function updatePaymentInfoPanel(paymentData) {
+            const statusClass = paymentData.status === 'completed' ? 'status-completed' : 'status-processing';
+            const statusIcon = paymentData.status === 'completed' ? 'fa-check-circle' : 'fa-clock';
+            
+            let itemsHtml = '';
+            paymentData.items.forEach(item => {
+                itemsHtml += `
+                    <li>
+                        <span>${item.name} (Qty: ${item.quantity})</span>
+                        <span>$${item.price.toFixed(2)}</span>
+                    </li>
+                `;
+            });
+            
+            paymentInfoPanel.innerHTML = `
+                <div class="payment-info">
+                    <h3><i class="fas fa-credit-card"></i> Payment #${paymentData.payment_id}</h3>
+                    <p>
+                        <strong>Customer</strong>
+                        <span>${paymentData.customer_name}</span>
+                    </p>
+                    <p>
+                        <strong>Amount</strong>
+                        <span>$${paymentData.amount.toFixed(2)} ${paymentData.currency}</span>
+                    </p>
+                    <p>
+                        <strong>Date</strong>
+                        <span>${new Date(paymentData.date).toLocaleDateString()}</span>
+                    </p>
+                    <p>
+                        <strong>Status</strong>
+                        <span class="status ${statusClass}">
+                            <i class="fas ${statusIcon}"></i>
+                            ${paymentData.status}
+                        </span>
+                    </p>
+                    
+                    <h4 style="margin: 1rem 0 0.5rem 0; font-size: 0.875rem; color: var(--text-light);">
+                        <i class="fas fa-shopping-cart"></i> Items
+                    </h4>
+                    <ul class="item-list">
+                        ${itemsHtml}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Add test buttons to help debug
+        const testButtonsDiv = document.createElement('div');
+        testButtonsDiv.style.marginTop = '1rem';
+        testButtonsDiv.style.paddingTop = '1rem';
+        testButtonsDiv.style.borderTop = '1px solid var(--border-color)';
+        testButtonsDiv.innerHTML = `
+            <button id="check-api" style="background-color: #0ea5e9; margin-right: 0.5rem;">
+                <i class="fas fa-sync"></i> Check API
+            </button>
+            <button id="test-message" style="background-color: #22c55e;">
+                <i class="fas fa-paper-plane"></i> Send Test Message
+            </button>
+        `;
+        debugOutput.appendChild(testButtonsDiv);
+
+        // Add event listeners for test buttons
+        document.getElementById('check-api').addEventListener('click', function(event) {
+            event.preventDefault();
+            checkAPIConnection();
+        });
+        
+        document.getElementById('test-message').addEventListener('click', function(event) {
+            event.preventDefault();
+            messageInput.value = "Hello, this is a test message";
+            sendMessage();
+        });
+
+        // Initialize
+        logDebug('Frontend initialized. Debug mode is enabled by default to help troubleshoot.');
+        logDebug(`Using API URL: ${API_URL}`);
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl + R to reset
+            if (e.ctrlKey && e.key === 'r') {
+                e.preventDefault();
+                resetButton.click();
+            }
+            // Ctrl + L to focus input
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                messageInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>
